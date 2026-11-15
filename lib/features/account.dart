@@ -292,7 +292,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         onChanged:(v)=>setState(()=>selected=v)),
       CheckboxListTile(value:consent,onChanged:(v)async{
         setState(()=>consent=v??false);
-        try{await widget.state.repo.setLeaderboardOptIn(consent);}catch(e){if(mounted) showError(context,e);}
+        try{await widget.state.repo.setLeaderboardOptIn(consent);}catch(e){if(context.mounted) showError(context,e);}
       },title:const Text('Cho phép công khai biệt danh của tôi'),subtitle:const Text('Có thể tắt bất kỳ lúc nào.')),
       const SectionHeading('Kết quả'),
       if(widget.state.repo.isDemo||widget.state.repo.user==null)const Surface(child:Text('Đăng nhập và kết nối máy chủ để xem bảng xếp hạng.'))
