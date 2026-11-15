@@ -19,12 +19,12 @@ class ActivityTab extends StatelessWidget {
       if(snapshot.hasError)return Center(child:Text('Không tải được lịch sử: ${snapshot.error}'));
       if(!snapshot.hasData)return const Center(child:CircularProgressIndicator());
       final rows=snapshot.data!;
-      if(rows.isEmpty)return Center(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[
+      if(rows.isEmpty) { return Center(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[
         const Icon(Icons.assignment_outlined,size:60,color:Palette.blue),const SizedBox(height:12),
         const Text('Chưa có lượt làm bài',style:TextStyle(fontWeight:FontWeight.w800,fontSize:18)),
         const SizedBox(height:10),const Text('Chọn một bài đánh giá và bắt đầu luyện tập.',textAlign:TextAlign.center),
         const SizedBox(height:18),ElevatedButton(onPressed:onGoCatalog,child:const Text('Khám phá đề thi')),
-      ])));
+      ]))); }
       final avg=rows.map((e)=>e.finalScore).reduce((a,b)=>a+b)/rows.length;
       return RefreshIndicator(onRefresh:()async{(context as Element).markNeedsBuild();},child:ListView(padding:const EdgeInsets.all(17),children:[
         Surface(color:const Color(0xFFE5EEFF),child:Row(children:[
@@ -116,8 +116,11 @@ class _AuthPageState extends State<AuthPage> {
     if(emailCtrl.text.trim().isEmpty||passCtrl.text.length<6){showError(context,'Nhập email hợp lệ và mật khẩu từ 6 ký tự.');return;}
     setState(()=>busy=true);
     try {
-      if(register)await widget.repo.signUp(nameCtrl.text.trim(),emailCtrl.text.trim(),passCtrl.text);
-      else await widget.repo.signIn(emailCtrl.text.trim(),passCtrl.text);
+      if(register) {
+        await widget.repo.signUp(nameCtrl.text.trim(),emailCtrl.text.trim(),passCtrl.text);
+      } else {
+        await widget.repo.signIn(emailCtrl.text.trim(),passCtrl.text);
+      }
       if(!mounted)return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(register?'Đã gửi yêu cầu đăng ký. Kiểm tra email xác nhận nếu được bật.':'Đăng nhập thành công.')));
       Navigator.pop(context);
@@ -133,7 +136,13 @@ class _AuthPageState extends State<AuthPage> {
     const SizedBox(height:20),ElevatedButton(onPressed:busy?null:_submit,child:Text(busy?'Đang xử lý...':register?'Đăng ký':'Đăng nhập')),
     TextButton(onPressed:()=>setState(()=>register=!register),child:Text(register?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Đăng ký')),
     if(!register)TextButton(onPressed:()async{
-      try{await widget.repo.resetPassword(emailCtrl.text.trim());if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Nếu email hợp lệ, hướng dẫn đặt lại mật khẩu sẽ được gửi.')));}catch(e){showError(context,e);}
+      try {
+        await widget.repo.resetPassword(emailCtrl.text.trim());
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Nếu email hợp lệ, hướng dẫn đặt lại mật khẩu sẽ được gửi.')));
+      } catch(e) {
+        if (context.mounted) showError(context,e);
+      }
     },child:const Text('Quên mật khẩu?')),
     if(widget.repo.isDemo) const Padding(padding:EdgeInsets.only(top:18),child:Text('Bạn đang chạy bản demo. Cấu hình Supabase ở GitHub Actions để đăng nhập bằng tài khoản thật.',style:TextStyle(color:Palette.muted),textAlign:TextAlign.center)),
   ]));
@@ -173,7 +182,16 @@ class _ClassesPageState extends State<ClassesPage> {
       TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Hủy')),
       FilledButton(onPressed:()=>Navigator.pop(ctx,ctrl.text),child:const Text('Xác nhận'))]));
     ctrl.dispose();if(result==null||result.trim().isEmpty)return;
-    try {if(create)await widget.repo.createClass(result.trim());else await widget.repo.joinClass(result.trim());if(mounted)setState((){});}catch(e){showError(context,e);}
+    try {
+      if(create) {
+        await widget.repo.createClass(result.trim());
+      } else {
+        await widget.repo.joinClass(result.trim());
+      }
+      if(mounted) setState((){});
+    } catch(e) {
+      if(mounted) showError(context,e);
+    }
   }
   @override
   Widget build(BuildContext context)=>PageWrap(title:'Lớp học',child:ListView(padding:const EdgeInsets.all(18),children:[
@@ -188,8 +206,14 @@ class _ClassesPageState extends State<ClassesPage> {
         Text(asText(row['name']),style:const TextStyle(fontWeight:FontWeight.w800)),Text('Mã lớp: ${row['join_code']}',style:const TextStyle(color:Palette.muted)),
         if(widget.repo.isTeacher&&asText(row['teacher_id'])==widget.repo.user?.id) TextButton(onPressed:()async{
           final exam=await showModalBottomSheet<Exam>(context:context,builder:(c)=>ListView(children:widget.state.exams.map((e)=>ListTile(title:Text(e.title),onTap:()=>Navigator.pop(c,e))).toList()));
-          if(exam==null)return;
-          try {await widget.repo.assignExam(asText(row['id']),exam.id);if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Đã giao đề cho lớp.')));}catch(e){showError(context,e);}
+          if(exam==null || !context.mounted) return;
+          try {
+            await widget.repo.assignExam(asText(row['id']),exam.id);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Đã giao đề cho lớp.')));
+          } catch(e) {
+            if(context.mounted) showError(context,e);
+          }
         },child:const Text('Giao đề')),
       ])))).toList());
     }),
@@ -268,7 +292,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         onChanged:(v)=>setState(()=>selected=v)),
       CheckboxListTile(value:consent,onChanged:(v)async{
         setState(()=>consent=v??false);
-        try{await widget.state.repo.setLeaderboardOptIn(consent);}catch(e){showError(context,e);}
+        try{await widget.state.repo.setLeaderboardOptIn(consent);}catch(e){if(mounted) showError(context,e);}
       },title:const Text('Cho phép công khai biệt danh của tôi'),subtitle:const Text('Có thể tắt bất kỳ lúc nào.')),
       const SectionHeading('Kết quả'),
       if(widget.state.repo.isDemo||widget.state.repo.user==null)const Surface(child:Text('Đăng nhập và kết nối máy chủ để xem bảng xếp hạng.'))

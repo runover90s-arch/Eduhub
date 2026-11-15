@@ -29,7 +29,7 @@ class _LessonPageState extends State<LessonPage> {
   Future<void> _save() async {
     try {await widget.repo.setNote(widget.lesson.id,noteCtrl.text,completed:completed);
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Đã lưu tiến độ và ghi chú.')));
-    } catch(e){showError(context,e);}
+    } catch(e){if(mounted) showError(context,e);}
   }
   @override
   void dispose(){noteCtrl.dispose();super.dispose();}

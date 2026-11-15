@@ -54,7 +54,7 @@ class RichMathText extends StatelessWidget {
     for(final segment in spans){
       if(segment.isMath){
         if(segment.display){flush();lines.add(_math(segment.value,display:true));}
-        else inline.add(_math(segment.value,display:false));
+        else { inline.add(_math(segment.value,display:false)); }
         continue;
       }
       final paragraphs=segment.value.split('\n');

@@ -19,7 +19,6 @@ class _StudioPageState extends State<StudioPage> {
   @override
   Widget build(BuildContext context) {
     if(!widget.state.repo.isAdmin)return const PageWrap(title:'EduHub Studio',child:Center(child:Text('Chỉ tài khoản quản trị có quyền truy cập.')));
-    final repo=widget.state.repo;
     return PageWrap(title:'EduHub Studio',child:Column(children:[
       SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:List.generate(4,(i)=>Padding(padding:const EdgeInsets.symmetric(horizontal:4),child:ChoiceChip(
         label:Text(['Đề thi','Bài học','Gói đăng ký','Giám sát G2'][i]),selected:tab==i,onSelected:(_)=>setState(()=>tab=i),
@@ -52,9 +51,16 @@ class _StudioPageState extends State<StudioPage> {
               await pushScreen(context,QuestionCreatePage(state:widget.state,examId:asText(row['id'])));if(mounted)setState((){});
             },child:const Text('Thêm câu')),
             TextButton(onPressed:()async{
-              try{if(row['status']=='published')await repo.archiveExam(asText(row['id']));else await repo.publishExam(asText(row['id']));
-                if(mounted)setState((){});
-              }catch(e){showError(context,e);}
+              try {
+                if(row['status']=='published') {
+                  await repo.archiveExam(asText(row['id']));
+                } else {
+                  await repo.publishExam(asText(row['id']));
+                }
+                if(mounted) setState((){});
+              } catch(e) {
+                if(context.mounted) showError(context,e);
+              }
             },child:Text(row['status']=='published'?'Lưu trữ':'Công bố')),
           ]),
         ])))),
@@ -97,7 +103,7 @@ class _StudioPageState extends State<StudioPage> {
             actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Hủy')),
               FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Cấp quyền'))]));
           if(accept!=true)return;
-          try{await repo.approveOrder(asText(order['id']));if(mounted)setState((){});}catch(e){showError(context,e);}
+          try{await repo.approveOrder(asText(order['id']));if(mounted)setState((){});}catch(e){if(context.mounted) showError(context,e);}
         },child:const Text('Duyệt và cấp quyền')),
       ])))),
     ]));
@@ -118,8 +124,10 @@ class _StudioPageState extends State<StudioPage> {
             content:TextField(controller:ctl,maxLines:3,decoration:const InputDecoration(hintText:'Nêu lý do phúc tra...')),
             actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Hủy')),
               FilledButton(onPressed:()=>Navigator.pop(ctx,ctl.text),child:const Text('Miễn trừ'))]));
-          ctl.dispose();if(reason==null||reason.trim().length<5){showError(context,'Lý do cần ít nhất 5 ký tự.');return;}
-          try{await repo.waiveIncident(asText(entry['id']),reason);if(mounted)setState((){});}catch(e){showError(context,e);}
+          ctl.dispose();
+          if(!context.mounted) return;
+          if(reason==null||reason.trim().length<5){showError(context,'Lý do cần ít nhất 5 ký tự.');return;}
+          try{await repo.waiveIncident(asText(entry['id']),reason);if(mounted)setState((){});}catch(e){if(context.mounted) showError(context,e);}
         },child:const Text('Phúc tra / miễn trừ')),
       ])))),
       const SectionHeading('Bài tự luận chờ chấm'),
@@ -141,8 +149,9 @@ class _StudioPageState extends State<StudioPage> {
                   FilledButton(onPressed:()=>Navigator.pop(ctx,ctl.text),child:const Text('Chấm'))]));
               ctl.dispose();if(value==null)return;
               final number=double.tryParse(value.replaceAll(',','.'));
+              if(!context.mounted) return;
               if(number==null||number<0){showError(context,'Điểm không hợp lệ.');return;}
-              try{await repo.gradeEssay(asText(attempt['session_id']),entry.key,number);if(mounted)setState((){});}catch(e){showError(context,e);}
+              try{await repo.gradeEssay(asText(attempt['session_id']),entry.key,number);if(mounted)setState((){});}catch(e){if(context.mounted) showError(context,e);}
             },child:const Text('Chấm điểm')),
           ]))).toList());
         }).toList());
@@ -239,7 +248,7 @@ class _ExamCreatePageState extends State<ExamCreatePage> {
       if(!mounted)return;
       await pushScreen(context,QuestionCreatePage(state:widget.state,examId:id));
       if(mounted)Navigator.pop(context,true);
-    }catch(e){showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
+    }catch(e){if(mounted) showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
   }
   @override
   Widget build(BuildContext context)=>PageWrap(title:'Tạo đề mới',child:ListView(padding:const EdgeInsets.all(18),children:[
@@ -296,7 +305,7 @@ class _QuestionCreatePageState extends State<QuestionCreatePage> {
       if(!mounted)return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Đã lưu câu $position.')));
       setState((){position++;prompt.clear();options.clear();statements.clear();answer.clear();explanation.clear();image.clear();});
-    }catch(e){showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
+    }catch(e){if(mounted) showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
   }
   @override
   Widget build(BuildContext context)=>PageWrap(title:'Soạn câu $position',child:ListView(padding:const EdgeInsets.all(18),children:[
@@ -354,7 +363,7 @@ class _LessonCreatePageState extends State<LessonCreatePage> {
       if(publish==true)await widget.state.repo.publishLesson(id);
       await widget.state.refresh();
       if(mounted)Navigator.pop(context,true);
-    }catch(e){showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
+    }catch(e){if(mounted) showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
   }
   @override Widget build(BuildContext context)=>PageWrap(title:'Soạn bài học',child:ListView(padding:const EdgeInsets.all(18),children:[
     TextField(controller:title,decoration:const InputDecoration(labelText:'Tên bài học')),const SizedBox(height:10),
@@ -394,7 +403,7 @@ class _PackageCreatePageState extends State<PackageCreatePage> {
         'grants_all_pro':allPro,'is_active':true,
       },exams.toList(),lessons.toList());
       if(mounted)Navigator.pop(context,true);
-    }catch(e){showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
+    }catch(e){if(mounted) showError(context,e);}finally{if(mounted)setState(()=>busy=false);}
   }
   @override
   Widget build(BuildContext context)=>PageWrap(title:'Tạo gói học',child:ListView(padding:const EdgeInsets.all(18),children:[

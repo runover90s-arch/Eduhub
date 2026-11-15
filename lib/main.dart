@@ -6,6 +6,7 @@ import 'core/design.dart';
 import 'data/repository.dart';
 import 'features/account.dart';
 import 'features/catalog.dart';
+import 'features/exam.dart' show openExam;
 import 'features/home.dart';
 import 'features/packages.dart';
 

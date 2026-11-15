@@ -32,7 +32,13 @@ class PackagesTab extends StatelessWidget {
             title:const Text('Xác nhận yêu cầu đăng ký'),content:Text('Gửi yêu cầu về gói ${pack.title}? Việc gửi yêu cầu không đồng nghĩa đã thanh toán hoặc được cấp quyền.'),
             actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Hủy')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Gửi yêu cầu'))]));
           if(accept!=true) return;
-          try{await state.repo.requestPackage(pack.id);if(context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Đã gửi yêu cầu. Chưa có thanh toán tự động.')));}catch(e){showError(context,e);}
+          try {
+             await state.repo.requestPackage(pack.id);
+             if (!context.mounted) return;
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Đã gửi yêu cầu. Chưa có thanh toán tự động.')));
+           } catch(e) {
+             if (context.mounted) showError(context,e);
+           }
         },child:const Text('Yêu cầu đăng ký')),
       ])))),
       if(!state.repo.isDemo&&state.repo.user!=null) ...[

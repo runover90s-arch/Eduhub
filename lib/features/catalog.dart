@@ -47,7 +47,7 @@ class _CatalogTabState extends State<CatalogTab> {
             items:['Mới nhất','Thời gian','Nhiều câu'].map((s)=>DropdownMenuItem(value:s,child:Text(s,style:const TextStyle(fontSize:13)))).toList(),
             onChanged:(v)=>setState(()=>sort=v??'Mới nhất'))),
         ]),
-        SwitchListTile(title:const Text('Chỉ hiện đề miễn phí',style:TextStyle(fontSize:13)),value:onlyFree,onChanged:(v)=>setState(()=>onlyFree=v),dense:true,activeColor:Palette.blue),
+        SwitchListTile(title:const Text('Chỉ hiện đề miễn phí',style:TextStyle(fontSize:13)),value:onlyFree,onChanged:(v)=>setState(()=>onlyFree=v),dense:true,activeThumbColor:Palette.blue),
         Padding(padding:const EdgeInsets.fromLTRB(4,12,4,10),child:Text('${exams.length} đề phù hợp',style:const TextStyle(color:Palette.deepBlue,fontWeight:FontWeight.w800,fontSize:16))),
         if(exams.isEmpty) const Surface(child:Text('Chưa có đề phù hợp. Thử một bộ lọc khác.')),
         ...exams.map((exam)=>Padding(padding:const EdgeInsets.only(bottom:12),child:ExamListCard(exam:exam,onTap:()=>widget.onExamTap(exam)))),

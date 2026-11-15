@@ -212,7 +212,7 @@ class QuestionAnswerEditor extends StatelessWidget {
           final active=question.kind=='single'?value==letter:asList(value).contains(letter);
           return Padding(padding:const EdgeInsets.only(bottom:9),child:Surface(
             color:active?const Color(0xFFE8F0FF):Palette.canvas,
-            onTap:(){if(question.kind=='single')onChanged(letter);else {
+            onTap:(){if(question.kind=='single') { onChanged(letter); } else {
               final picked=List<String>.from(asList(value).map((e)=>e.toString()));
               picked.contains(letter)?picked.remove(letter):picked.add(letter);
               onChanged(picked);
