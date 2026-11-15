@@ -1,0 +1,24 @@
+name: eduhub
+description: EduHub - học tập, đánh giá và luyện thi.
+publish_to: none
+version: 2.0.0+20
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_math_fork: 0.7.4
+  supabase_flutter: 2.18.3
+  shared_preferences: 2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/demo.json

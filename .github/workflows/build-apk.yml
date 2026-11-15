@@ -1,0 +1,50 @@
+name: EduHub Flutter - Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  flutter-check-and-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+      - name: Generate Android scaffold
+        run: flutter create --platforms=android --org vn.eduhub --project-name eduhub .
+      - name: Install native Android G2 bridge
+        run: python3 scripts/patch_android.py
+      - name: Resolve pinned packages
+        run: flutter pub get
+      - name: Static analysis
+        run: flutter analyze
+      - name: Run Flutter tests
+        run: flutter test
+      - name: Run source-level security tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+      - name: Build debug APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          flutter build apk --debug \
+            --dart-define="SUPABASE_URL=${SUPABASE_URL}" \
+            --dart-define="SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}"
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: EduHub-Flutter-Debug-APK
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
